@@ -1,4 +1,4 @@
-package wsv2
+package wsv1
 
 import (
 	"net/http"

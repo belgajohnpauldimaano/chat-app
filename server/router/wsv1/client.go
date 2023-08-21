@@ -1,7 +1,8 @@
-package wsv2
+package wsv1
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -15,10 +16,6 @@ type Client struct {
 	MessageEvent chan *MessageEvent
 }
 
-// type MessageContent struct {
-
-// }
-
 var (
 	pongWait     = 10 * time.Second
 	pingInterval = (pongWait * 9) / 10 // 90% of pongWait
@@ -28,11 +25,6 @@ const (
 	privateMessage = "privateMessage"
 	groupMessage   = "groupMessage"
 )
-
-// type Payload struct {
-// 	Recipient string `json:"recipient"`
-// 	Content   string `json:"content"`
-// }
 
 func (c *Client) readMessage(hub *Hub) {
 	defer func() {
@@ -69,22 +61,24 @@ func (c *Client) readMessage(hub *Hub) {
 		}
 		messageEventContent.Sender = c.UserId
 
-		// msg := &MessageEvent{
-		// 	Type:      "test",
-		// 	Sender:    c.UserId,
-		// 	Recipient: "",
-		// 	Content:   string(payload),
-		// }
-
-		// msg := &messageEventContent
-
-		switch messageEventContent.Type {
-		case privateMessage:
-			log.Println("private message")
-			hub.PrivateMessageEventBroadcast <- &messageEventContent
-		default:
-			hub.MessageEventBroadcast <- &messageEventContent
+		// OPTION 2: Get the event handler here and call with provided message
+		// 					 to publish a message to redis
+		pubsubPublisherHandlerKey := fmt.Sprintf("%sPublisher", messageEventContent.Type)
+		if err := hub.routeEvent(&messageEventContent, pubsubPublisherHandlerKey); err != nil {
+			continue
 		}
+
+		// OPTION 1: send message to channel then hub will manage the message
+		// switch messageEventContent.Type {
+		// case privateMessage:
+		// 	log.Println("private message")
+		// 	hub.PrivateMessageEventBroadcast <- &messageEventContent
+		// 	// if eventHandler, ok := hub.messageEventHandlers["privateMessageEvent"]; ok {
+		// 	// 	eventHandler(&messageEventContent, hub)
+		// 	// }
+		// default:
+		// 	hub.Broadcast <- &messageEventContent
+		// }
 	}
 }
 

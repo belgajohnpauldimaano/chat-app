@@ -12,8 +12,7 @@ import (
 	"chat-app/infrastructure/db"
 	"chat-app/internal/user"
 	"chat-app/router"
-	"chat-app/router/ws"
-	"chat-app/router/wsv2"
+	"chat-app/router/wsv1"
 )
 
 func main() {
@@ -61,15 +60,11 @@ func main() {
 	userSvc := user.NewService(userRep)
 	userHandler := user.NewHandler(userSvc)
 
-	hub := ws.NewHub()
-	wsHandler := ws.NewHandler(hub)
-	go hub.Run()
+	hubV1 := wsv1.NewHub(redisClient)
+	wsHandlerV1 := wsv1.NewHandler(hubV1)
+	go hubV1.Run()
 
-	hubV2 := wsv2.NewHub(redisClient)
-	wsHandlerV2 := wsv2.NewHandler(hubV2)
-	go hubV2.Run()
-
-	router.InitRouter(userHandler, wsHandler, wsHandlerV2)
+	router.InitRouter(userHandler, wsHandlerV1)
 	// For Redis Pubsub testing on multiple app instance
 	// First instance
 	router.Start("0.0.0.0:8080")
