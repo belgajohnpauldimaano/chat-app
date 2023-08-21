@@ -19,10 +19,14 @@
 2. Change directory to server, `cd server`
 3. Run `make run-air`
 
-
 #### TODOS
+
 - Finilize folder structure
 - Finalize Private Chate
 - Add Group Chat
 - Add unit testing
 - Add Frontend
+
+#### Architecture Diagram
+
+![arch-diagram.png](image/readme/arch-diagram.png.png)
