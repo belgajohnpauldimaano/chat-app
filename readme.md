@@ -29,4 +29,4 @@
 
 #### Architecture Diagram
 
-![arch-diagram.png](image/readme/arch-diagram.png.png)
+![arch-diagram.png](image/readme/arch-diagram.png)
