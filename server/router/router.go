@@ -9,13 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"chat-app/internal/user"
-	"chat-app/router/ws"
-	"chat-app/router/wsv2"
+	wsv2 "chat-app/router/wsv1"
 )
 
 var r *gin.Engine
 
-func InitRouter(userHandler *user.Handler, wsHandler *ws.Handler, wsv2Handler *wsv2.Handler) {
+func InitRouter(userHandler *user.Handler, wsv1Handler *wsv2.Handler) {
 	r = gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -43,13 +42,8 @@ func InitRouter(userHandler *user.Handler, wsHandler *ws.Handler, wsv2Handler *w
 	r.POST("/login", userHandler.Login)
 	r.GET("/logout", userHandler.Logout)
 
-	r.POST("/ws/create-room", wsHandler.CreateRoom)
-	r.GET("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
-	r.GET("/ws/getRooms", wsHandler.GetRooms)
-	r.GET("/ws/getClients/:roomId", wsHandler.GetClients)
-
-	r.GET("/ws/v2", wsv2Handler.StartWS)
-	r.GET("/ws/v2/get-clients", wsv2Handler.GetClients)
+	r.GET("/ws/v1", wsv1Handler.StartWS)
+	r.GET("/ws/v1/get-clients", wsv1Handler.GetClients)
 }
 
 func Start(addr string) error {
