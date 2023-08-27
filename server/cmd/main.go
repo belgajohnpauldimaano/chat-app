@@ -11,8 +11,8 @@ import (
 	caching "chat-app/infrastructure/cache"
 	"chat-app/infrastructure/db"
 	"chat-app/internal/user"
+	"chat-app/internal/wsv1"
 	"chat-app/router"
-	"chat-app/router/wsv1"
 )
 
 func main() {
