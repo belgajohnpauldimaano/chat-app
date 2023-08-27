@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"chat-app/internal/user"
-	wsv2 "chat-app/router/wsv1"
+	wsv2 "chat-app/internal/wsv1"
 )
 
 var r *gin.Engine
