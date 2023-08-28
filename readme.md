@@ -27,6 +27,12 @@
 - Add unit testing
 - Add Frontend
 
+#### Migrations
+This commands are using docker to perform migration
+- `make create-migration-file migration_name=CHANGE_THIS_WITH_MIGRATON_NAME` to create a migration files
+- `make migrateup-docker` to run the migration file in docker
+- `make migratedown-docker` delete migrations using docker
+
 #### Architecture Diagram
 
 ![arch-diagram.png](image/readme/arch-diagram.png)

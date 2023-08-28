@@ -20,3 +20,5 @@ wire_gen.go
 # RSA key
 .public
 .private
+
+.DS_Store
