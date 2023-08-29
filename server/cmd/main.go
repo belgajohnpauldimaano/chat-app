@@ -60,8 +60,11 @@ func main() {
 	userSvc := user.NewService(userRep)
 	userHandler := user.NewHandler(userSvc)
 
-	hubV1 := wsv1.NewHub(redisClient)
+	chatRepo := wsv1.NewChatRepository(dbConn.GetDB())
+	chatService := wsv1.NewChatService(chatRepo)
+	hubV1 := wsv1.NewHub(redisClient, chatService)
 	wsHandlerV1 := wsv1.NewHandler(hubV1)
+
 	go hubV1.Run()
 
 	router.InitRouter(userHandler, wsHandlerV1)

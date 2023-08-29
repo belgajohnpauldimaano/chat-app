@@ -18,11 +18,12 @@ type Hub struct {
 	PrivateMessageEventBroadcast chan *MessageEvent
 	caching                      *caching.RedisImpl
 	messageEventHandlers         map[string]MessageEventHandler
+	chatService                  ChatService
 
 	sync.RWMutex
 }
 
-func NewHub(caching *caching.RedisImpl) *Hub {
+func NewHub(caching *caching.RedisImpl, chatService ChatService) *Hub {
 	hub := &Hub{
 		Clients:                      make(map[string][]*Client),
 		Register:                     make(chan *Client),
@@ -31,6 +32,7 @@ func NewHub(caching *caching.RedisImpl) *Hub {
 		PrivateMessageEventBroadcast: make(chan *MessageEvent, 5),
 		messageEventHandlers:         make(map[string]MessageEventHandler),
 		caching:                      caching,
+		chatService:                  chatService,
 	}
 	log.Println("NeHub")
 	hub.setupEventHandlers()

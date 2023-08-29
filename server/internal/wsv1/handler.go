@@ -8,7 +8,8 @@ import (
 )
 
 type Handler struct {
-	hub *Hub
+	hub         *Hub
+	chatService ChatService
 }
 
 func NewHandler(h *Hub) *Handler {

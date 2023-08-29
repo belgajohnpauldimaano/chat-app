@@ -7,10 +7,11 @@ import (
 )
 
 type MessageEvent struct {
-	Type      string `json:"type"`
-	Sender    string `json:"sender"`
-	Recipient string `json:"recipient"`
-	Content   string `json:"content"`
+	Type           string `json:"type"`
+	Sender         string `json:"sender"`
+	Recipient      string `json:"recipient"`
+	Content        string `json:"content"`
+	ConversationID string `json:"conversation_id"`
 }
 
 type MessageEventHandler func(event *MessageEvent, h *Hub) error
@@ -22,7 +23,6 @@ const (
 
 func SendPrivateMessagePublisher(messageEvent *MessageEvent, h *Hub) error {
 	cachingClient := h.caching.RedisClientRing
-	ctx := context.Background()
 	log.Println("Publishing a private message to pubsub...")
 
 	jsonData, err := json.Marshal(messageEvent)
@@ -33,8 +33,18 @@ func SendPrivateMessagePublisher(messageEvent *MessageEvent, h *Hub) error {
 
 	log.Println(string(jsonData))
 	payload := string(jsonData)
+	log.Println("publishing payload: ", payload)
 
+	// Create a conversation based on conversation type
+	newConversation := &ConversationRequest{
+		ID:               messageEvent.ConversationID,
+		UserId:           messageEvent.Sender,
+		RecipientId:      messageEvent.Recipient,
+		ConversationType: 0,
+	}
+	h.chatService.CreateConversation(context.TODO(), newConversation)
 	// Publish a message to the channel
+	ctx := context.Background()
 	errPublish := cachingClient.Publish(ctx, PRIVATE_MESSAGE_EVENT, payload).Err()
 	if errPublish != nil {
 		log.Println("Error publishing message:", errPublish)
