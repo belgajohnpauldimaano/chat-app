@@ -6,7 +6,7 @@ CREATE TABLE "messages" (
   "content" text,
   "content_type" int NOT NULL,
   "timestamp" TIMESTAMP DEFAULT NOW(),
-	CONSTRAINT message_conversations_conversation_id_fk FOREIGN KEY (conversation_id) REFERENCES conversations(id),
+	-- CONSTRAINT message_conversations_conversation_id_fk FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id),
 	CONSTRAINT message_sender_user_user_id_fk FOREIGN KEY (sender_id) REFERENCES users(id),
 	CONSTRAINT messages_recipient_user_user_id_fk FOREIGN KEY (recipient_id) REFERENCES users(id)
 )
