@@ -71,19 +71,10 @@ func (h *Hub) Run() {
 				continue
 			}
 
+			// log.Println("Message publish type")
 			if err := h.routeEvent(&message, message.Type); err != nil {
 				continue
 			}
-
-			// NOTE: This code below can send a data to MessageEvent Channel
-			// if client, ok := h.Clients[message.Recipient]; ok {
-			// 	log.Println("Sending private message to: ", message.Recipient)
-			// 	// single use can have multipe instances of connection when
-			// 	// logging in from mulple devices/browsers
-			// 	for _, c := range client {
-			// 		c.MessageEvent <- &message
-			// 	}
-			// }
 		case client := <-h.Register:
 			h.addClient(client)
 		case client := <-h.Unregister:
@@ -173,6 +164,7 @@ func (h *Hub) setupEventHandlers() {
 
 func (h *Hub) routeEvent(messageEvent *MessageEvent, eventType string) error {
 	eventHandler, ok := h.messageEventHandlers[eventType]
+	log.Println("Event Type: ", eventType)
 	if !ok {
 		return errors.New("No handler for event type: " + messageEvent.Type)
 	}

@@ -19,23 +19,63 @@ func (cs *chatService) GetConversations(ctx context.Context, userId int64) ([]*C
 	return cs.chatRepository.GetConversations(ctx, userId)
 }
 
-func (cs *chatService) CreateConversation(ctx context.Context, conversation *ConversationRequest) (*Conversation, error) {
+// TODO: Change the function name into Generate Message
+// it includes:
+//   - Create Conversation if needed
+//   - Create message
+func (cs *chatService) CreateConversation(ctx context.Context, conversation *ConversationRequest) (*Message, error) {
 	log.Println("Service Creating conversatin...")
 
-	senderConversation := &Conversation{
-		ConversationType: conversation.ConversationType,
-		UserId:           conversation.UserId,
+	// Conversation is not created yet, so we create one
+	if conversation.ConversationId == "" {
+		senderConversation := &Conversation{
+			ConversationType: conversation.ConversationType,
+			UserId:           conversation.UserId,
+		}
+
+		recipientConversation := &Conversation{
+			ConversationType: conversation.ConversationType,
+			UserId:           conversation.RecipientId,
+		}
+
+		conversations := []*Conversation{}
+		conversations = append(conversations, recipientConversation)
+
+		senderConverstionResult, err := cs.chatRepository.CreateConversation(context.TODO(), senderConversation)
+		log.Println("Conversation create: ", senderConverstionResult.ConversationId)
+		if err != nil {
+			log.Println("Error while creating conversation", err)
+		}
+
+		for _, conversation := range conversations {
+			conversation.ConversationId = senderConverstionResult.ConversationId
+			converstionResult, err := cs.chatRepository.CreateConversation(context.TODO(), conversation)
+			log.Println("Conversation create: ", converstionResult.ConversationId)
+			if err != nil {
+				log.Println("Error while creating conversation", err)
+			}
+		}
+
+		// return senderConversation, nil
 	}
 
-	recipientConversation := &Conversation{
-		ConversationType: conversation.ConversationType,
-		UserId:           conversation.RecipientId,
+	messageRequest := &MessageRequest{
+		ConversationId: conversation.ConversationId,
+		SenderId:       conversation.UserId,
+		RecipientId:    conversation.RecipientId,
+		Content:        conversation.Content,
+		ContentType:    conversation.ContentType,
 	}
 
-	conversations := []*Conversation{}
-	conversations = append(conversations, senderConversation, recipientConversation)
+	newMessage, err := cs.chatRepository.CreateMessage(ctx, messageRequest)
 
-	return cs.chatRepository.CreateConversation(context.TODO(), conversations)
+	if err != nil {
+		log.Println("Error while creating a message in database, err: ", err)
+	}
+
+	log.Println("Created time: ", newMessage.Timestamp)
+
+	return newMessage, nil
 }
 
 func (cs *chatService) GetMessagesByConversation(ctx context.Context, conversationId int64) ([]*Message, error) {

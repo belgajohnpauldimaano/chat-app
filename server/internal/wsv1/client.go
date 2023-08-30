@@ -1,6 +1,7 @@
 package wsv1
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -61,10 +62,42 @@ func (c *Client) readMessage(hub *Hub) {
 		}
 		messageEventContent.Sender = c.UserId
 
+		// Create a conversation based on conversation type
+		newConversation := &ConversationRequest{
+			ConversationId:   messageEventContent.ConversationID,
+			UserId:           messageEventContent.Sender,
+			RecipientId:      messageEventContent.Recipient,
+			Content:          messageEventContent.Content,
+			ContentType:      messageEventContent.ContentType,
+			ConversationType: 0,
+		}
+
+		createdMessage, err := hub.chatService.CreateConversation(context.TODO(), newConversation)
+		log.Println("conversation id: ", createdMessage.ConversationId)
+
+		messageEventContent.Timestamp = createdMessage.Timestamp
+
+		messageEventContent.ConversationID = createdMessage.ConversationId
+
 		// OPTION 2: Get the event handler here and call with provided message
 		// 					 to publish a message to redis
 		pubsubPublisherHandlerKey := fmt.Sprintf("%sPublisher", messageEventContent.Type)
 		if err := hub.routeEvent(&messageEventContent, pubsubPublisherHandlerKey); err != nil {
+			log.Println("Failed to send response message, err: ", err)
+			continue
+		}
+
+		senderResponseMessageEventContent := &MessageEvent{
+			Type:           "privateMessageEvent",
+			Recipient:      c.UserId,
+			ConversationID: messageEventContent.ConversationID,
+			Timestamp:      createdMessage.Timestamp,
+		}
+
+		// Send messge to sender to notify that the message is sucessfully created and queued
+		senderPubsubPublisherHandlerKey := fmt.Sprintf("%sPublisher", senderResponseMessageEventContent.Type)
+		if err := hub.routeEvent(senderResponseMessageEventContent, senderPubsubPublisherHandlerKey); err != nil {
+			log.Println("Failed to send response message response to sender, err: ", err)
 			continue
 		}
 
