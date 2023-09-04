@@ -1,4 +1,4 @@
-package wsv1
+package chat
 
 import (
 	"net/http"

@@ -10,8 +10,8 @@ import (
 
 	caching "chat-app/infrastructure/cache"
 	"chat-app/infrastructure/db"
+	chat "chat-app/internal/chat"
 	"chat-app/internal/user"
-	"chat-app/internal/wsv1"
 	"chat-app/router"
 )
 
@@ -60,10 +60,10 @@ func main() {
 	userSvc := user.NewService(userRep)
 	userHandler := user.NewHandler(userSvc)
 
-	chatRepo := wsv1.NewChatRepository(dbConn.GetDB())
-	chatService := wsv1.NewChatService(chatRepo)
-	hubV1 := wsv1.NewHub(redisClient, chatService)
-	wsHandlerV1 := wsv1.NewHandler(hubV1)
+	chatRepo := chat.NewChatRepository(dbConn.GetDB())
+	chatService := chat.NewChatService(chatRepo)
+	hubV1 := chat.NewHub(redisClient, chatService)
+	wsHandlerV1 := chat.NewHandler(hubV1)
 
 	go hubV1.Run()
 
