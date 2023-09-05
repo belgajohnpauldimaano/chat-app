@@ -13,7 +13,7 @@ import (
 
 var r *gin.Engine
 
-func InitRouter(userHandler *user.Handler, wsv1Handler *chat.Handler) {
+func InitRouter(userHandler *user.Handler, chatHandler *chat.Handler) {
 	r = gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -41,8 +41,9 @@ func InitRouter(userHandler *user.Handler, wsv1Handler *chat.Handler) {
 	r.POST("/login", userHandler.Login)
 	r.GET("/logout", userHandler.Logout)
 
-	r.GET("/chat/v1", wsv1Handler.StartWS)
-	r.GET("/chat/v1/get-clients", wsv1Handler.GetClients)
+	r.GET("/v1/chat", chatHandler.StartWS)
+	r.GET("/v1/chat/clients", chatHandler.GetClients)
+	r.GET("/v1/chat/user-conversations", chatHandler.GetUserConversations)
 }
 
 func Start(addr string) error {

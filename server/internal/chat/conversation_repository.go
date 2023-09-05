@@ -25,15 +25,43 @@ func NewChatRepository(db DBTX) ChatRepository {
 	return &chatRepository{db: db}
 }
 
-func (r *chatRepository) GetConversations(ctx context.Context, userId int64) ([]*Conversation, error) {
-	conversations := make([]*Conversation, 0)
+func (r *chatRepository) GetConversations(ctx context.Context, userId string) ([]*Conversation, error) {
+	var conversations []*Conversation
+	rows, err := r.db.QueryContext(
+		ctx,
+		`
+			SELECT * FROM conversations
+			WHERE user_id = $1
+			LIMIT 20
+		`,
+		userId,
+	)
 
+	if err != nil {
+		log.Println("Something went wrong, error: ", err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var result Conversation
+		err := rows.Scan(&result.ID, &result.ConversationId, &result.UserId, &result.ConversationType, &result.CreatedAt)
+		if err != nil {
+			log.Fatal(err)
+		}
+		conversations = append(conversations, &result)
+	}
+
+	// rows.
 	return conversations, nil
 }
 
 func (r *chatRepository) CreateConversation(ctx context.Context, conversation *Conversation) (*Conversation, error) {
 	log.Println("Creating conversation...")
 	log.Println("Sender: ", conversation.UserId)
+	log.Println("convo id: ", conversation.ConversationId)
+	log.Println("Type: ", conversation.ConversationType)
 
 	if conversation.ConversationId == "" {
 		conversation.ConversationId = uuid.New().String()
@@ -57,7 +85,7 @@ func (r *chatRepository) CreateConversation(ctx context.Context, conversation *C
 	return conversation, nil
 }
 
-func (r *chatRepository) GetMessagesByConversation(ctx context.Context, conversationId int64) ([]*Message, error) {
+func (r *chatRepository) GetMessagesByConversation(ctx context.Context, conversationId string) ([]*Message, error) {
 	messages := make([]*Message, 0)
 
 	return messages, nil
@@ -86,7 +114,8 @@ func (r *chatRepository) CreateMessage(ctx context.Context, message *MessageRequ
 	queryErr := stmt.QueryRow(genearatedMessageId, message.ConversationId, message.SenderId, message.RecipientId, message.Content, message.ContentType).Scan(&createdTimestamp)
 
 	if queryErr != nil {
-		log.Fatal(err)
+		log.Println("Something went wrong! err: ", queryErr)
+		log.Fatal(queryErr)
 		return nil, queryErr
 	}
 

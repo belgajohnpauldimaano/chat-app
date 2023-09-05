@@ -6,11 +6,11 @@ import (
 )
 
 type Conversation struct {
-	ID               int64     `json:"id"`
-	ConversationId   string    `json:"ConversationId"`
-	ConversationType int32     `json:"conversationType"`
-	UserId           string    `json:"userId"`
-	CreatedAt        time.Time `json:"createdAt"`
+	ID               int64     `json:"id" db:"id"`
+	ConversationId   string    `json:"conversationId" db:"conversation_id"`
+	ConversationType int32     `json:"conversationType" db:"conversation_type"`
+	UserId           string    `json:"userId" db:"user_id"`
+	CreatedAt        time.Time `json:"createdAt" db:"created_at"`
 }
 
 type ConversationRequest struct {
@@ -41,15 +41,28 @@ type MessageRequest struct {
 }
 
 type ChatRepository interface {
-	GetConversations(ctx context.Context, userId int64) ([]*Conversation, error)
+	GetConversations(ctx context.Context, userId string) ([]*Conversation, error)
 	CreateConversation(ctx context.Context, conversation *Conversation) (*Conversation, error)
-	GetMessagesByConversation(ctx context.Context, conversationId int64) ([]*Message, error)
+	GetMessagesByConversation(ctx context.Context, conversationId string) ([]*Message, error)
 	CreateMessage(ctx context.Context, message *MessageRequest) (*Message, error)
 }
 
 type ChatService interface {
-	GetConversations(ctx context.Context, userId int64) ([]*Conversation, error)
+	GetConversations(ctx context.Context, request *GetUserConversationsRequest) ([]*Conversation, error)
 	CreateConversation(ctx context.Context, conversations *ConversationRequest) (*Message, error)
-	GetMessagesByConversation(ctx context.Context, conversationId int64) ([]*Message, error)
+	GetMessagesByConversation(ctx context.Context, conversationId string) ([]*Message, error)
 	CreateMessage(ctx context.Context, message *MessageRequest) (*Message, error)
+}
+
+type GetUserConversationsRequest struct {
+	UserId string `json:"userId"`
+	Page   int32  `json:"page"`
+	Limit  int32  `json:"limit"`
+}
+
+type GetUserConversationsResponse struct {
+	IsSuccess     bool            `json:"isSuccess"`
+	Status        int32           `json:"status"`
+	Message       string          `json:"message"`
+	Conversations []*Conversation `json:"conversations"`
 }

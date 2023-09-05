@@ -2,6 +2,7 @@ package chat
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -64,4 +65,39 @@ func (h *Handler) GetClients(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, clients)
+}
+
+func (h *Handler) GetUserConversations(c *gin.Context) {
+	var requestObj GetUserConversationsRequest
+	if c.Query("page") != "" {
+		page, err := strconv.ParseInt(c.Query("page"), 10, 32)
+		if err == nil {
+			requestObj.Page = int32(page)
+		}
+	}
+
+	if c.Query("limit") != "" {
+		limit, err := strconv.ParseInt(c.Query("limit"), 10, 32)
+		if err == nil {
+			requestObj.Limit = int32(limit)
+		}
+	}
+	requestObj.UserId = c.Query("userId")
+	conversations, getConversationsErr := h.hub.chatService.GetConversations(c.Request.Context(), &requestObj)
+
+	responseObj := &GetUserConversationsResponse{
+		IsSuccess:     true,
+		Status:        200,
+		Message:       "User conversations",
+		Conversations: conversations,
+	}
+
+	if getConversationsErr != nil {
+		responseObj.IsSuccess = false
+		responseObj.Status = 500
+		responseObj.Message = "Something went wrong!"
+		responseObj.Conversations = nil
+	}
+
+	c.JSON(http.StatusOK, responseObj)
 }

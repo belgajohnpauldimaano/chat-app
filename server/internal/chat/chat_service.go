@@ -15,8 +15,11 @@ func NewChatService(chatRepository ChatRepository) ChatService {
 	}
 }
 
-func (cs *chatService) GetConversations(ctx context.Context, userId int64) ([]*Conversation, error) {
-	return cs.chatRepository.GetConversations(ctx, userId)
+func (cs *chatService) GetConversations(ctx context.Context, request *GetUserConversationsRequest) ([]*Conversation, error) {
+	log.Println(request.UserId, "wwwww")
+	// xxx := make([]*Conversation, 0)
+	// return xxx, nil
+	return cs.chatRepository.GetConversations(ctx, request.UserId)
 }
 
 // TODO: Change the function name into Generate Message
@@ -24,8 +27,8 @@ func (cs *chatService) GetConversations(ctx context.Context, userId int64) ([]*C
 //   - Create Conversation if needed
 //   - Create message
 func (cs *chatService) CreateConversation(ctx context.Context, conversation *ConversationRequest) (*Message, error) {
-	log.Println("Service Creating conversatin...")
-
+	log.Println("Service Creating conversation...")
+	log.Println("at Service Converstion ID", conversation.ConversationId)
 	// Conversation is not created yet, so we create one
 	if conversation.ConversationId == "" {
 		senderConversation := &Conversation{
@@ -43,6 +46,7 @@ func (cs *chatService) CreateConversation(ctx context.Context, conversation *Con
 
 		senderConverstionResult, err := cs.chatRepository.CreateConversation(context.TODO(), senderConversation)
 		log.Println("Conversation create: ", senderConverstionResult.ConversationId)
+		conversation.ConversationId = senderConverstionResult.ConversationId
 		if err != nil {
 			log.Println("Error while creating conversation", err)
 		}
@@ -58,7 +62,7 @@ func (cs *chatService) CreateConversation(ctx context.Context, conversation *Con
 
 		// return senderConversation, nil
 	}
-
+	log.Println("conversation.ConversationId: ", conversation.ConversationId)
 	messageRequest := &MessageRequest{
 		ConversationId: conversation.ConversationId,
 		SenderId:       conversation.UserId,
@@ -78,7 +82,7 @@ func (cs *chatService) CreateConversation(ctx context.Context, conversation *Con
 	return newMessage, nil
 }
 
-func (cs *chatService) GetMessagesByConversation(ctx context.Context, conversationId int64) ([]*Message, error) {
+func (cs *chatService) GetMessagesByConversation(ctx context.Context, conversationId string) ([]*Message, error) {
 	return cs.chatRepository.GetMessagesByConversation(ctx, conversationId)
 }
 
