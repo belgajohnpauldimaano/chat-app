@@ -16,9 +16,6 @@ func NewChatService(chatRepository ChatRepository) ChatService {
 }
 
 func (cs *chatService) GetConversations(ctx context.Context, request *GetUserConversationsRequest) ([]*Conversation, error) {
-	log.Println(request.UserId, "wwwww")
-	// xxx := make([]*Conversation, 0)
-	// return xxx, nil
 	return cs.chatRepository.GetConversations(ctx, request.UserId)
 }
 
@@ -29,6 +26,15 @@ func (cs *chatService) GetConversations(ctx context.Context, request *GetUserCon
 func (cs *chatService) CreateConversation(ctx context.Context, conversation *ConversationRequest) (*Message, error) {
 	log.Println("Service Creating conversation...")
 	log.Println("at Service Converstion ID", conversation.ConversationId)
+
+	existingUserConversation, existingUserConversationErr := cs.chatRepository.GetUsersExistingConversation(ctx, []string{"844b6164-3fb7-4197-90ba-625a719a2647", "aa44324d-bcd4-4e94-a0f7-ae0999e29bd1"})
+
+	if existingUserConversationErr != nil {
+		log.Println("Error in getting user conversation. err: ", existingUserConversationErr)
+	}
+
+	conversation.ConversationId = existingUserConversation.ConversationId
+	log.Println("conversation.ConversationId: ", conversation.ConversationId, "xxxx")
 	// Conversation is not created yet, so we create one
 	if conversation.ConversationId == "" {
 		senderConversation := &Conversation{

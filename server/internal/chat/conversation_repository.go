@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -53,7 +55,6 @@ func (r *chatRepository) GetConversations(ctx context.Context, userId string) ([
 		conversations = append(conversations, &result)
 	}
 
-	// rows.
 	return conversations, nil
 }
 
@@ -130,4 +131,71 @@ func (r *chatRepository) CreateMessage(ctx context.Context, message *MessageRequ
 	}
 
 	return createdMessage, nil
+}
+
+func (r *chatRepository) GetUsersExistingConversation(ctx context.Context, userIds []string) (*Conversation, error) {
+	var inParameterValue string = ""
+
+	for _, userId := range userIds {
+		inParameterValue = fmt.Sprintf(`%s'%s',`, inParameterValue, userId)
+	}
+
+	inParameterValue = inParameterValue[:len(inParameterValue)-1]
+
+	usersConversationsQuery := fmt.Sprintf(`
+		select conversation_id from conversation_participants
+		where user_id in (%s)
+		group by conversation_id 
+		having  count(distinct user_id) = %s;
+		`, inParameterValue, strconv.Itoa(len(userIds)))
+
+	usersConversationsRows, err := r.db.QueryContext(
+		ctx,
+		usersConversationsQuery,
+	)
+
+	defer usersConversationsRows.Close()
+
+	if err != nil {
+		log.Println("Something went wrong, error: ", err)
+		return nil, err
+	}
+
+	var userConversation UserConversation
+
+	for usersConversationsRows.Next() {
+		err := usersConversationsRows.Scan(&userConversation.ConversationId)
+		if err != nil {
+			log.Println("Scanning error: ", err)
+		}
+	}
+
+	log.Println("UserId: ", userConversation.UserId)
+	log.Println("ConversationId: ", userConversation.ConversationId)
+
+	rows, err := r.db.QueryContext(
+		ctx,
+		`
+			SELECT * FROM conversations
+			WHERE conversation_id = $1
+			LIMIT 20
+		`,
+		userConversation.ConversationId,
+	)
+
+	if err != nil {
+		log.Println("Something went wrong, error: ", err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var result Conversation
+	rows.Next()
+	err = rows.Scan(&result.ID, &result.UserId, &result.ConversationId, &result.ConversationType, &result.CreatedAt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &result, nil
 }

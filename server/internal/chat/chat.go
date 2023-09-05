@@ -7,9 +7,9 @@ import (
 
 type Conversation struct {
 	ID               int64     `json:"id" db:"id"`
+	UserId           string    `json:"userId" db:"user_id"`
 	ConversationId   string    `json:"conversationId" db:"conversation_id"`
 	ConversationType int32     `json:"conversationType" db:"conversation_type"`
-	UserId           string    `json:"userId" db:"user_id"`
 	CreatedAt        time.Time `json:"createdAt" db:"created_at"`
 }
 
@@ -32,6 +32,12 @@ type Message struct {
 	Timestamp      time.Time `json:"createdAt"`
 }
 
+type UserConversation struct {
+	UserId         string    `json:"userId" db:"user_id"`
+	ConversationId string    `json:"conversationId"`
+	CreatedAt      time.Time `json:"createdAt" db:"created_at"`
+}
+
 type MessageRequest struct {
 	ConversationId string `json:"conversationId"`
 	SenderId       string `json:"senderId"`
@@ -45,6 +51,7 @@ type ChatRepository interface {
 	CreateConversation(ctx context.Context, conversation *Conversation) (*Conversation, error)
 	GetMessagesByConversation(ctx context.Context, conversationId string) ([]*Message, error)
 	CreateMessage(ctx context.Context, message *MessageRequest) (*Message, error)
+	GetUsersExistingConversation(ctx context.Context, userIds []string) (*Conversation, error)
 }
 
 type ChatService interface {
